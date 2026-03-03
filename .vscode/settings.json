@@ -1,0 +1,32 @@
+{
+  // GitHub Copilot — enable custom instruction files
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+
+  // Automatically apply instruction files whose `applyTo` glob matches the current file
+  "chat.includeApplyingInstructions": true,
+
+  // Directories where Copilot looks for *.instructions.md files
+  "chat.instructionsFilesLocations": [".github/instructions"],
+
+  // Directories where Copilot looks for *.prompt.md files (usable with # in chat)
+  "chat.promptFilesLocations": [".github/prompts"],
+
+  // Editor — enforce project formatting settings
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+
+  // Files to exclude from explorer and search
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/dist": true,
+    "**/.next": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/dist": true,
+    "**/package-lock.json": true
+  }
+}
