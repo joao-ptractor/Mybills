@@ -14,19 +14,5 @@
   // Editor — enforce project formatting settings
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "editor.tabSize": 2,
-
-  // Files to exclude from explorer and search
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/.turbo": true,
-    "**/dist": true,
-    "**/.next": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.turbo": true,
-    "**/dist": true,
-    "**/package-lock.json": true
-  }
+  "editor.tabSize": 2
 }
