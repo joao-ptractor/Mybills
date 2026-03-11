@@ -3,6 +3,7 @@
 ## Project Overview
 
 MyBills is a personal finance management application. It allows the user to track:
+
 - Bank accounts and their balances
 - Credit cards and monthly invoices
 - Financial transactions (income, expenses, transfers)
@@ -29,17 +30,17 @@ mybills/
 
 ## Technology Stack
 
-| Area | Technology |
-|------|-----------|
-| API Framework | NestJS 11 |
-| Mobile | React Native 0.83 + Expo 55 |
-| Language | TypeScript 5 (strict mode everywhere) |
-| Database | PostgreSQL via Prisma ORM |
-| Mobile State | Zustand |
-| Build System | Turborepo |
-| Linting | ESLint 9 (flat config) |
-| Formatting | Prettier (100 chars, single quotes, 2-space indent) |
-| Testing (API) | Jest + @nestjs/testing + Supertest |
+| Area          | Technology                                          |
+| ------------- | --------------------------------------------------- |
+| API Framework | NestJS 11                                           |
+| Mobile        | React Native 0.83 + Expo 55                         |
+| Language      | TypeScript 5 (strict mode everywhere)               |
+| Database      | PostgreSQL via Prisma ORM                           |
+| Mobile State  | Zustand                                             |
+| Build System  | Turborepo                                           |
+| Linting       | ESLint 9 (flat config)                              |
+| Formatting    | Prettier (100 chars, single quotes, 2-space indent) |
+| Testing (API) | Jest + @nestjs/testing + Supertest                  |
 
 ## General Coding Conventions
 
@@ -49,8 +50,16 @@ mybills/
 - Use named exports, not default exports, except for React Native screen components and Expo Router pages.
 - All public functions and methods must have explicit return types.
 - Keep functions small and focused — prefer composition over long procedures.
+- Always apply Dependency Inversion Principle (DIP): high-level modules must depend on abstractions, not concretions.
+- In NestJS, use dependency injection with interface-like contracts/tokens and avoid coupling services directly to concrete infrastructure implementations.
 - Never hardcode strings that represent domain concepts (column names, status values, etc.) — use enums or const maps.
 - Never commit secrets, credentials, or `.env` files.
+
+## Testing Workflow (TDD)
+
+- Follow TDD for every new feature and bug fix
+- Every feature change must include automated tests covering the new behavior (unit and/or integration as appropriate).
+- Run relevant tests after each feature increment and before concluding the task; do not consider work complete with failing tests.
 
 ## Financial Domain Rules
 
