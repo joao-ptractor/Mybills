@@ -30,20 +30,6 @@ Always use `@map` and `@@map` to keep Prisma models idiomatic TypeScript while t
 - All repository queries that list records must filter `deletedAt: null`.
 - Only system configuration records (e.g., categories, tags) may allow hard deletes.
 
-## Relations
-
-- Name relation fields clearly: use the related model name in camelCase.
-- Always define both sides of a relation.
-- Use `onDelete: Restrict` for financial records — prevent accidental cascade deletes.
-
-```prisma
-model Transaction {
-  id        String  @id @default(uuid())
-  accountId String  @map("account_id")
-  account   Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
-}
-```
-
 ## Enums
 
 - Define Prisma enums for fields with a fixed set of values.
