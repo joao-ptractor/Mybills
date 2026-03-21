@@ -42,31 +42,11 @@ apps/api/src/
         └── <feature>.entity.ts
 ```
 
-Examples of feature modules: `accounts`, `cards`, `transactions`, `invoices`, `investments`, `categories`.
-
 ## Controllers
 
 - Decorate every controller with `@ApiTags('<feature>')`.
 - Decorate every endpoint with `@ApiOperation`, `@ApiResponse`.
 - Use `@UseGuards(JwtAuthGuard)` on all protected endpoints.
-- Use `ParseIntPipe`, `ParseUUIDPipe` for path parameter validation.
-- Return HTTP 201 for creation, 200 for reads/updates, 204 for deletes.
-
-```typescript
-@ApiTags('accounts')
-@Controller('accounts')
-@UseGuards(JwtAuthGuard)
-export class AccountsController {
-  constructor(private readonly accountsService: AccountsService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create a new account' })
-  @ApiResponse({ status: 201, type: AccountResponseDto })
-  create(@Body() dto: CreateAccountDto): Promise<AccountResponseDto> {
-    return this.accountsService.create(dto);
-  }
-}
-```
 
 ## Services
 
@@ -80,19 +60,6 @@ export class AccountsController {
 - Methods must be named semantically: `findById`, `findAllByUserId`, `create`, `update`, `softDelete`.
 - Always pass the `userId` filter to prevent cross-user data leaks.
 - Return Prisma model types internally; the service maps them to DTOs.
-
-```typescript
-@Injectable()
-export class AccountsRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async findById(id: string, userId: string) {
-    return this.prisma.account.findFirst({
-      where: { id, userId, deletedAt: null }
-    });
-  }
-}
-```
 
 ## Error Handling
 
