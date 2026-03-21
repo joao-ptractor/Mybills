@@ -2,6 +2,6 @@
   "extends": "@mybills/typescript-config/nest.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": "./"
   }
 }
