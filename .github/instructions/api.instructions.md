@@ -31,13 +31,16 @@ apps/api/src/
     ├── <feature>.module.ts
     ├── <feature>.controller.ts
     ├── <feature>.service.ts
-    ├── <feature>.repository.ts
     ├── <feature>.controller.spec.ts
     ├── <feature>.service.spec.ts
     ├── dto/
     │   ├── create-<feature>.dto.ts
     │   ├── update-<feature>.dto.ts
     │   └── <feature>-response.dto.ts
+    |── repositories/
+    │   ├── <feature>.repository.ts          # repository interface
+    │   └── prisma/
+    │       └── prisma-<feature>.repository.ts  # Prisma implementation
     └── entities/      # (optional) domain interfaces/types
         └── <feature>.entity.ts
 ```
@@ -56,7 +59,7 @@ apps/api/src/
 
 ## Repositories
 
-- Inject `PrismaService` via constructor.
+- Inject `PrismaRepository` via constructor.
 - Methods must be named semantically: `findById`, `findAllByUserId`, `create`, `update`, `softDelete`.
 - Always pass the `userId` filter to prevent cross-user data leaks.
 - Return Prisma model types internally; the service maps them to DTOs.
