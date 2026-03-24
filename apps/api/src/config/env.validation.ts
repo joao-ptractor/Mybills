@@ -11,6 +11,8 @@ export const envSchema = z.object({
     .min(10, 'Chave para o token de atualização deve conter no mínimo 10 caracteres')
 });
 
+export type Env = z.infer<typeof envSchema>;
+
 export function validate(config: Record<string, unknown>) {
   const result = envSchema.safeParse(config);
 
