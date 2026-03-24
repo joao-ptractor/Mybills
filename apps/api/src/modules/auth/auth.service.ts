@@ -1,7 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { AuthRepository } from './repositories/auth.repository';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly repository: AuthRepository) {}
+  constructor(
+    private readonly repository: AuthRepository,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService
+  ) {}
+
+  async getTokens(userId: string, email: string) {
+    const jwtPayload = { sub: userId, email };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(jwtPayload, {
+        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+        expiresIn: '15m'
+      }),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+        expiresIn: '7d'
+      })
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  async updateRefreshToken(userId: string, refreshToken: string) {
+    const hash = await bcrypt.hash(refreshToken, 10);
+
+    await this.repository.updateRefreshToken(userId, hash);
+  }
 }

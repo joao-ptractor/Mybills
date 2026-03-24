@@ -4,10 +4,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { DatabaseModule } from '../database/database.module';
 import { PrismaAuthRepository } from './repositories/prisma/prisma-auth.repository';
 import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [UserModule, DatabaseModule, JwtModule.register({})],
-  controllers: [],
+  imports: [ConfigModule, UserModule, DatabaseModule, JwtModule.register({})],
+  controllers: [AuthController],
   providers: [
     {
       provide: 'AuthRepository',
