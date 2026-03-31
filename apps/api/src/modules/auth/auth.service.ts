@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuthRepository } from './repositories/auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -8,7 +8,7 @@ import { Env } from 'src/config/env.validation';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly repository: AuthRepository,
+    @Inject('AuthRepository') private readonly repository: AuthRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Env>
   ) {}

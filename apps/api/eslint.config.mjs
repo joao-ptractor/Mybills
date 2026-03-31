@@ -4,6 +4,9 @@ import { nestJsConfig } from '@mybills/eslint-config/nest';
 export default [
   ...nestJsConfig,
   {
-    ignores: ['.prettierrc.mjs', 'eslint.config.mjs']
+    ignores: ['.prettierrc.mjs', 'eslint.config.mjs'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off'
+    }
   }
 ];

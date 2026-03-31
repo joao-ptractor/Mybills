@@ -4,4 +4,6 @@ export class User {
   name: string;
   password: string;
   refreshToken: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
