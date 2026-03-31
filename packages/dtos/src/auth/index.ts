@@ -1,1 +1,2 @@
-export * from './input/register.dto'
+export * from './input/register-input.dto';
+export * from './output/register-output.dto';
