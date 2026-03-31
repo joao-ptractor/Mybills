@@ -2,6 +2,24 @@
   "name": "@mybills/dtos",
   "version": "1.0.0",
   "description": "",
-  "license": "ISC",
-  "author": ""
+  "license": "MIT",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
 }

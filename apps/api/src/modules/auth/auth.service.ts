@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Env } from 'src/config/env.validation';
+import { SignUpData } from './types/sign-up-data.types';
 
 @Injectable()
 export class AuthService {
@@ -35,4 +36,6 @@ export class AuthService {
 
     await this.repository.updateRefreshToken(userId, hash);
   }
+
+  async signUp(data: SignUpData) {}
 }
