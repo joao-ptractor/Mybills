@@ -15,12 +15,14 @@ import {
 } from '@mybills/dtos';
 import { toJSONSchema } from 'zod';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiOperation({
     summary: 'Cria um novo usuário',
@@ -41,6 +43,7 @@ export class AuthController {
     return this.authService.signUp(data);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login', description: 'Autentica um usuário e retorna um token JWT.' })

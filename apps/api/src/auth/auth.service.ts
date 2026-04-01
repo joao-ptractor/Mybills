@@ -10,6 +10,7 @@ import { UserRepository } from '../user/repositories/user.repository';
 import * as argon2 from 'argon2';
 import { SignInData } from './contracts/sign-in-data.contract';
 import { NotFoundError } from 'src/common/errors/not-found.error';
+import { JwtPayload } from './contracts/jwt-payload.contract';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,7 @@ export class AuthService {
   ) {}
 
   private async getTokens(userId: string, email: string) {
-    const jwtPayload = { sub: userId, email };
+    const jwtPayload: JwtPayload = { sub: userId, email };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
