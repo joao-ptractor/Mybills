@@ -1,8 +1,8 @@
 import { Body, Controller, Post, UsePipes, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { Serialize } from '../common/decorators/serialize.decorator';
+import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
+import { Serialize } from 'src/common/decorators/serialize.decorator';
 import {
   signUpInputSchema,
   signInInputSchema,
@@ -15,7 +15,7 @@ import {
 } from '@mybills/dtos';
 import { toJSONSchema } from 'zod';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { Public } from '../common/decorators/public.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')

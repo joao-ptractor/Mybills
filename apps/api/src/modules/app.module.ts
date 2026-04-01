@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
-import { validate } from './config/env.validation';
+import { validate } from '../config/env.validation';
 import { UserModule } from './user/users.module';
 import { AuthModule } from './auth/auth.module';
-import { DomainErrorFilter } from './common/filters/domain-error.filter';
-import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
+import { DomainErrorFilter } from '../common/filters/domain-error.filter';
+import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exception.filter';
 
 @Module({
   imports: [
@@ -18,12 +18,12 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exce
   providers: [
     {
       provide: APP_FILTER,
-      useClass: PrismaClientExceptionFilter,
+      useClass: PrismaClientExceptionFilter
     },
     {
       provide: APP_FILTER,
-      useClass: DomainErrorFilter,
-    },
-  ],
+      useClass: DomainErrorFilter
+    }
+  ]
 })
 export class AppModule {}

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from '../user/users.module';
 import { JwtModule } from '@nestjs/jwt';
-import { DatabaseModule } from '../database/database.module';
+import { DatabaseModule } from 'src/modules/database/database.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { ConfigModule } from '@nestjs/config';
@@ -15,7 +15,7 @@ import { AuthGuard } from './guards/auth.guard';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: AuthGuard
     },
     {
       provide: 'UserRepository',
