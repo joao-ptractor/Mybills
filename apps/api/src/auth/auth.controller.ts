@@ -25,16 +25,16 @@ export class AuthController {
   @Public()
   @Post('register')
   @ApiOperation({
-    summary: 'Cria um novo usuário',
-    description: 'Cria um novo usuário com os dados fornecidos.'
+    summary: 'Creates a new user',
+    description: 'Creates a new user with the provided data.'
   })
   @ApiBody({
     schema: toJSONSchema(signUpInputSchema) as SchemaObject,
-    description: 'Dados de registro do usuário'
+    description: 'User registration data'
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Usuário criado com sucesso.',
+    description: 'User created successfully.',
     schema: toJSONSchema(signUpOutputSchema) as SchemaObject
   })
   @Serialize(signUpOutputSchema)
@@ -46,14 +46,14 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login', description: 'Autentica um usuário e retorna um token JWT.' })
+  @ApiOperation({ summary: 'Login', description: 'Authenticates a user and returns a JWT token.' })
   @ApiBody({
     schema: toJSONSchema(signInInputSchema) as SchemaObject,
-    description: 'Credenciais de login do usuário'
+    description: 'User login credentials'
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Usuário autenticado com sucesso.',
+    description: 'User authenticated successfully.',
     schema: toJSONSchema(signInOutputSchema) as SchemaObject
   })
   @Serialize(signInOutputSchema)

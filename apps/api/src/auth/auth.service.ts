@@ -45,18 +45,18 @@ export class AuthService {
 
   async signUp(data: SignUpData) {
     if (!data.email || typeof data.email !== 'string') {
-      throw new InvalidArgumentError('Email inválido');
+      throw new InvalidArgumentError('Invalid email');
     }
     if (!data.name || typeof data.name !== 'string') {
-      throw new InvalidArgumentError('Nome inválido');
+      throw new InvalidArgumentError('Invalid name');
     }
     if (!data.password || typeof data.password !== 'string') {
-      throw new InvalidArgumentError('Senha inválida');
+      throw new InvalidArgumentError('Invalid password');
     }
 
     const user = await this.repository.findByEmail(data.email);
     if (user) {
-      throw new AlreadyExistsError('Email já cadastrado');
+      throw new AlreadyExistsError('Email already registered');
     }
 
     const hashedPassword = await argon2.hash(data.password);
@@ -76,20 +76,20 @@ export class AuthService {
 
   async signIn(data: SignInData) {
     if (!data.email || typeof data.email !== 'string') {
-      throw new InvalidArgumentError('Email inválido');
+      throw new InvalidArgumentError('Invalid email');
     }
     if (!data.password || typeof data.password !== 'string') {
-      throw new InvalidArgumentError('Senha inválida');
+      throw new InvalidArgumentError('Invalid password');
     }
 
     const user = await this.repository.findByEmail(data.email);
     if (!user) {
-      throw new NotFoundError('Email ou senha inválidos');
+      throw new NotFoundError('Invalid email or password');
     }
 
     const isPasswordValid = await argon2.verify(user.password, data.password);
     if (!isPasswordValid) {
-      throw new NotFoundError('Email ou senha inválidos');
+      throw new NotFoundError('Invalid email or password');
     }
 
     const tokens = await this.getTokens(user.id, user.email);

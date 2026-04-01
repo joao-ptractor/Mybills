@@ -10,7 +10,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('MyBills API')
-    .setDescription('Documentação da API MyBills')
+    .setDescription('MyBills API Documentation')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

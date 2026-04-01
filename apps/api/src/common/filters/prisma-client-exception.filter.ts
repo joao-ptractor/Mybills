@@ -9,29 +9,29 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Erro no banco de dados';
+    let message = 'Database error';
 
     switch (exception.code) {
       case 'P2002': {
         statusCode = HttpStatus.CONFLICT;
         const target = exception.meta?.target as string[];
-        const fields = target ? target.join(', ') : 'desconhecido';
-        message = `Conflito de dados: o registro já existe (campo: ${fields})`;
+        const fields = target ? target.join(', ') : 'unknown';
+        message = `Data conflict: the record already exists (field: ${fields})`;
         break;
       }
       case 'P2025': {
         statusCode = HttpStatus.NOT_FOUND;
-        message = 'Registro não encontrado no banco de dados.';
+        message = 'Record not found in database.';
         break;
       }
       case 'P2003': {
         statusCode = HttpStatus.BAD_REQUEST;
         const field_name = exception.meta?.field_name as string;
-        message = `Falha de restrição de chave estrangeira no campo: ${field_name || 'desconhecido'}`;
+        message = `Foreign key constraint failure on field: ${field_name || 'unknown'}`;
         break;
       }
       default:
-        message = `Erro de banco de dados (Código: ${exception.code})`;
+        message = `Database error (Code: ${exception.code})`;
         break;
     }
 
