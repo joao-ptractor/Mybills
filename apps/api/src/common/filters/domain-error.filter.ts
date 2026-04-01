@@ -11,23 +11,19 @@ export class DomainErrorFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let error = 'Internal server error';
 
     if (exception instanceof InvalidArgumentError) {
       statusCode = HttpStatus.BAD_REQUEST;
-      error = 'Invalid request';
     } else if (exception instanceof AlreadyExistsError) {
       statusCode = HttpStatus.CONFLICT;
-      error = 'Conflict';
     } else if (exception instanceof NotFoundError) {
       statusCode = HttpStatus.NOT_FOUND;
-      error = 'Not found';
     }
 
     response.status(statusCode).json({
       statusCode,
       message: exception.message,
-      error
+      error: exception.name || 'internal_server_error'
     });
   }
 }
