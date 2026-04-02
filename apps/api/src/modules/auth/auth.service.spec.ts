@@ -16,7 +16,7 @@ jest.mock('bcrypt');
 const mockedArgon2 = argon2 as jest.Mocked<typeof argon2>;
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
-describe('AuthService - Unit Tests', () => {
+describe('AuthService', () => {
   let authService: AuthService;
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
