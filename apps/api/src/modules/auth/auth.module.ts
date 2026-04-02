@@ -17,10 +17,6 @@ import { AuthGuard } from './guards/auth.guard';
       provide: APP_GUARD,
       useClass: AuthGuard
     },
-    {
-      provide: 'UserRepository',
-      useClass: PrismaUserRepository
-    },
     AuthService
   ]
 })

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -6,16 +6,16 @@ import { Env } from 'src/config/env.validation';
 import { SignUpData } from './contracts/sign-up-data.contract';
 import { InvalidArgumentError } from 'src/common/errors/invalid-argument.error';
 import { AlreadyExistsError } from 'src/common/errors/already-exists.error';
-import { UserRepository } from '../user/repositories/user.repository';
 import * as argon2 from 'argon2';
 import { SignInData } from './contracts/sign-in-data.contract';
 import { NotFoundError } from 'src/common/errors/not-found.error';
 import { JwtPayload } from './contracts/jwt-payload.contract';
+import { UsersService } from '../user/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('UserRepository') private readonly repository: UserRepository,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Env>
   ) {}
@@ -40,7 +40,7 @@ export class AuthService {
   async updateRefreshToken(userId: string, refreshToken: string) {
     const hash = await bcrypt.hash(refreshToken, 10);
 
-    await this.repository.updateRefreshToken(userId, hash);
+    await this.usersService.updateRefreshToken(userId, hash);
   }
 
   async signUp(data: SignUpData) {
@@ -54,14 +54,14 @@ export class AuthService {
       throw new InvalidArgumentError('Invalid password');
     }
 
-    const user = await this.repository.findByEmail(data.email);
+    const user = await this.usersService.findByEmail(data.email);
     if (user) {
       throw new AlreadyExistsError('Email already registered');
     }
 
     const hashedPassword = await argon2.hash(data.password);
 
-    const createdUser = await this.repository.create({
+    const createdUser = await this.usersService.create({
       name: data.name,
       email: data.email,
       hashedPassword
@@ -82,7 +82,7 @@ export class AuthService {
       throw new InvalidArgumentError('Invalid password');
     }
 
-    const user = await this.repository.findByEmail(data.email);
+    const user = await this.usersService.findByEmail(data.email);
     if (!user) {
       throw new NotFoundError('Invalid email or password');
     }
