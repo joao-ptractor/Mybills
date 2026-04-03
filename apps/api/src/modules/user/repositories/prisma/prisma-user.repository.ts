@@ -14,6 +14,7 @@ export class PrismaUserRepository implements UserRepository {
       name: user.name,
       email: user.email,
       password: user.password,
+      refreshToken: user.refreshToken,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };

@@ -10,7 +10,8 @@ import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exc
 @Module({
   imports: [
     ConfigModule.forRoot({
-      validate: validate
+      validate: validate,
+      envFilePath: process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
     }),
     UserModule,
     AuthModule
