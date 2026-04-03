@@ -20,19 +20,22 @@ function createPrismaClient(): PrismaClient {
 export async function resetDatabase(): Promise<void> {
   const prisma = createPrismaClient();
 
-  const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
-    SELECT tablename
-    FROM pg_tables
-    WHERE schemaname = 'public'
-      AND tablename <> '_prisma_migrations'
-  `;
+  try {
+    const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
+      SELECT tablename
+      FROM pg_tables
+      WHERE schemaname = 'public'
+        AND tablename <> '_prisma_migrations'
+    `;
 
-  if (tables.length === 0) {
-    return;
+    if (tables.length === 0) {
+      return;
+    }
+
+    const tableNames = tables.map(({ tablename }) => `"public"."${tablename}"`).join(', ');
+
+    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tableNames} RESTART IDENTITY CASCADE;`);
+  } finally {
+    await prisma.$disconnect();
   }
-
-  const tableNames = tables.map(({ tablename }) => `"public"."${tablename}"`).join(', ');
-
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tableNames} RESTART IDENTITY CASCADE;`);
-  await prisma.$disconnect();
 }
