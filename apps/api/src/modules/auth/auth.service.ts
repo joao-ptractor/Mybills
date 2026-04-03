@@ -134,4 +134,8 @@ export class AuthService {
 
     return tokens;
   }
+
+  async logout(userId: string) {
+    await this.usersService.updateRefreshToken(userId, null);
+  }
 }

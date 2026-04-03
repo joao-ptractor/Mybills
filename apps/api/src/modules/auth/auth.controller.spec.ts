@@ -23,7 +23,8 @@ describe('AuthController', () => {
           useValue: {
             signUp: jest.fn(),
             signIn: jest.fn(),
-            refreshTokens: jest.fn()
+            refreshTokens: jest.fn(),
+            logout: jest.fn()
           }
         }
       ]
@@ -96,6 +97,17 @@ describe('AuthController', () => {
       expect(result).toEqual(output);
       expect(authService.refreshTokens).toHaveBeenCalledTimes(1);
       expect(authService.refreshTokens).toHaveBeenCalledWith(input);
+    });
+  });
+
+  describe('logout', () => {
+    it('should call authService.logout with the current user id', async () => {
+      authService.logout.mockResolvedValue(undefined);
+
+      await authController.logout('user-123');
+
+      expect(authService.logout).toHaveBeenCalledTimes(1);
+      expect(authService.logout).toHaveBeenCalledWith('user-123');
     });
   });
 });

@@ -32,7 +32,7 @@ export class PrismaUserRepository implements UserRepository {
     return this.mapToEntity(user);
   }
 
-  async updateRefreshToken(userId: string, hashedRefreshToken: string): Promise<void> {
+  async updateRefreshToken(userId: string, hashedRefreshToken: string | null): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: hashedRefreshToken }

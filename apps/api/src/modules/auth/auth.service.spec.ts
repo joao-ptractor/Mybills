@@ -239,4 +239,12 @@ describe('AuthService', () => {
       ).rejects.toThrow(UnauthorizedError);
     });
   });
+
+  describe('logout', () => {
+    it('should clear the stored refresh token for the user', async () => {
+      await authService.logout('user-123');
+
+      expect(usersService.updateRefreshToken).toHaveBeenCalledWith('user-123', null);
+    });
+  });
 });

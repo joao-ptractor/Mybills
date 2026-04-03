@@ -11,7 +11,7 @@ export class UsersService {
     return await this.repository.findByEmail(email);
   }
 
-  async updateRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  async updateRefreshToken(userId: string, refreshToken: string | null): Promise<void> {
     await this.repository.updateRefreshToken(userId, refreshToken);
   }
 
