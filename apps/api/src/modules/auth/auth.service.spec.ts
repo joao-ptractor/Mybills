@@ -7,14 +7,17 @@ import { InvalidArgumentError } from 'src/common/errors/invalid-argument.error';
 import { AlreadyExistsError } from 'src/common/errors/already-exists.error';
 import { NotFoundError } from 'src/common/errors/not-found.error';
 import * as argon2 from 'argon2';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import { User } from '../user/entities/user.entity';
+import { UnauthorizedError } from 'src/common/errors/unauthorized.error';
 
 jest.mock('argon2');
-jest.mock('bcrypt');
 
 const mockedArgon2 = argon2 as jest.Mocked<typeof argon2>;
-const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
+
+function hashRefreshToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -26,6 +29,7 @@ describe('AuthService', () => {
     name: 'João',
     email: 'joao@example.com',
     password: 'hashed-password',
+    refreshToken: 'stored-refresh-token-hash',
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -45,7 +49,8 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: {
-            signAsync: jest.fn()
+            signAsync: jest.fn(),
+            verifyAsync: jest.fn()
           }
         },
         {
@@ -74,7 +79,6 @@ describe('AuthService', () => {
       usersService.updateRefreshToken.mockResolvedValue(undefined);
 
       mockedArgon2.hash.mockImplementation(async () => 'hashed-password');
-      mockedBcrypt.hash.mockImplementation(async () => 'hashed-refresh-token');
 
       const result = await authService.signUp({
         name: 'João',
@@ -90,7 +94,7 @@ describe('AuthService', () => {
       });
       expect(usersService.updateRefreshToken).toHaveBeenCalledWith(
         'user-123',
-        'hashed-refresh-token'
+        hashRefreshToken('refresh-token')
       );
     });
 
@@ -127,8 +131,6 @@ describe('AuthService', () => {
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
 
-      mockedBcrypt.hash.mockImplementation(async () => 'hashed-refresh-token');
-
       const result = await authService.signIn({
         email: 'joao@example.com',
         password: 'password123'
@@ -137,7 +139,7 @@ describe('AuthService', () => {
       expect(result).toEqual({ accessToken: 'access-token', refreshToken: 'refresh-token' });
       expect(usersService.updateRefreshToken).toHaveBeenCalledWith(
         'user-123',
-        'hashed-refresh-token'
+        hashRefreshToken('refresh-token')
       );
     });
 
@@ -172,6 +174,69 @@ describe('AuthService', () => {
           password: 'password123'
         })
       ).rejects.toThrow(InvalidArgumentError);
+    });
+  });
+
+  describe('refreshTokens', () => {
+    it('should validate a refresh token, rotate it and return new tokens', async () => {
+      const refreshToken = 'current-refresh-token';
+      const refreshableUser: User = {
+        ...mockUser,
+        refreshToken: hashRefreshToken(refreshToken)
+      };
+
+      usersService.findByEmail.mockResolvedValue(refreshableUser);
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: refreshableUser.id,
+        email: refreshableUser.email,
+        jti: 'jti-1'
+      });
+      jwtService.signAsync
+        .mockResolvedValueOnce('new-access-token')
+        .mockResolvedValueOnce('new-refresh-token');
+
+      const result = await authService.refreshTokens({
+        refreshToken
+      });
+
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token'
+      });
+      expect(usersService.updateRefreshToken).toHaveBeenCalledWith(
+        refreshableUser.id,
+        hashRefreshToken('new-refresh-token')
+      );
+    });
+
+    it('should throw UnauthorizedError if the refresh token cannot be verified', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error('invalid'));
+
+      await expect(
+        authService.refreshTokens({
+          refreshToken: 'invalid-refresh-token'
+        })
+      ).rejects.toThrow(UnauthorizedError);
+    });
+
+    it('should throw UnauthorizedError if the stored refresh token does not match', async () => {
+      const refreshableUser: User = {
+        ...mockUser,
+        refreshToken: hashRefreshToken('stored-refresh-token')
+      };
+
+      usersService.findByEmail.mockResolvedValue(refreshableUser);
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: refreshableUser.id,
+        email: refreshableUser.email,
+        jti: 'jti-2'
+      });
+
+      await expect(
+        authService.refreshTokens({
+          refreshToken: 'current-refresh-token'
+        })
+      ).rejects.toThrow(UnauthorizedError);
     });
   });
 });

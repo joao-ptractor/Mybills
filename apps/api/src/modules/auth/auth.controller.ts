@@ -11,7 +11,11 @@ import {
   signUpOutputSchema,
   signInOutputSchema,
   SignUpOutput,
-  SignInOutput
+  SignInOutput,
+  refreshTokenInputSchema,
+  refreshTokenOutputSchema,
+  RefreshTokenInput,
+  RefreshTokenOutput
 } from '@mybills/dtos';
 import { toJSONSchema } from 'zod';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
@@ -60,5 +64,27 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(signInInputSchema))
   async login(@Body() data: SignInInput): Promise<SignInOutput> {
     return this.authService.signIn(data);
+  }
+
+  @Public()
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh tokens',
+    description: 'Rotates the refresh token and returns a new token pair.'
+  })
+  @ApiBody({
+    schema: toJSONSchema(refreshTokenInputSchema) as SchemaObject,
+    description: 'Refresh token payload'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tokens refreshed successfully.',
+    schema: toJSONSchema(refreshTokenOutputSchema) as SchemaObject
+  })
+  @Serialize(refreshTokenOutputSchema)
+  @UsePipes(new ZodValidationPipe(refreshTokenInputSchema))
+  async refresh(@Body() data: RefreshTokenInput): Promise<RefreshTokenOutput> {
+    return this.authService.refreshTokens(data);
   }
 }

@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/modules/app.module';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import {
   signInOutputSchema,
   signUpOutputSchema,
@@ -14,6 +14,7 @@ import {
 } from '@mybills/dtos';
 import { UsersService } from 'src/modules/user/users.service';
 import { User } from 'src/modules/user/entities/user.entity';
+import { refreshTokenOutputSchema, RefreshTokenOutput } from '@mybills/dtos';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
@@ -27,12 +28,20 @@ describe('Auth (e2e)', () => {
     return signInOutputSchema.parse(body);
   }
 
+  function parseRefreshTokenOutput(body: object): RefreshTokenOutput {
+    return refreshTokenOutputSchema.parse(body);
+  }
+
   function getPersistedRefreshToken(user: User | null): string {
     if (!user?.refreshToken) {
       throw new Error('Expected persisted refresh token to exist');
     }
 
     return user.refreshToken;
+  }
+
+  function hashRefreshToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   beforeAll(async () => {
@@ -76,11 +85,7 @@ describe('Auth (e2e)', () => {
 
     const persistedRefreshToken = getPersistedRefreshToken(createdUser);
 
-    const isRefreshTokenHashed = await bcrypt.compare(
-      registerOutput.refreshToken,
-      persistedRefreshToken
-    );
-    expect(isRefreshTokenHashed).toBe(true);
+    expect(persistedRefreshToken).toBe(hashRefreshToken(registerOutput.refreshToken));
   });
 
   it('should not allow duplicate email registration', async () => {
@@ -153,11 +158,7 @@ describe('Auth (e2e)', () => {
 
     const persistedRefreshToken = getPersistedRefreshToken(user);
 
-    const isRefreshTokenUpdated = await bcrypt.compare(
-      loginOutput.refreshToken,
-      persistedRefreshToken
-    );
-    expect(isRefreshTokenUpdated).toBe(true);
+    expect(persistedRefreshToken).toBe(hashRefreshToken(loginOutput.refreshToken));
   });
 
   it('should return not found when login password is invalid', async () => {
@@ -217,5 +218,51 @@ describe('Auth (e2e)', () => {
       message: 'Validation failed'
     });
     expect(response.body.errors).toBeDefined();
+  });
+
+  it('should refresh tokens and rotate the stored refresh token', async () => {
+    const payload: SignUpInput = {
+      name: 'Refresh User',
+      email: 'refresh-user@mybills.dev',
+      password: 'Teste123'
+    };
+
+    await request(app.getHttpServer()).post('/auth/register').send(payload).expect(201);
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: payload.email, password: payload.password })
+      .expect(200);
+
+    const loginOutput = parseSignInOutput(loginResponse.body as object);
+
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refreshToken: loginOutput.refreshToken })
+      .expect(200);
+
+    const refreshOutput = parseRefreshTokenOutput(refreshResponse.body as object);
+
+    expect(refreshOutput).toEqual({
+      accessToken: expect.any(String),
+      refreshToken: expect.any(String)
+    });
+
+    expect(refreshOutput.refreshToken).not.toBe(loginOutput.refreshToken);
+
+    const user = await usersService.findByEmail(payload.email);
+    const persistedRefreshToken = getPersistedRefreshToken(user);
+
+    expect(persistedRefreshToken).toBe(hashRefreshToken(refreshOutput.refreshToken));
+
+    const reusedRefreshResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refreshToken: loginOutput.refreshToken })
+      .expect(401);
+
+    expect(reusedRefreshResponse.body).toMatchObject({
+      statusCode: 401,
+      message: 'Invalid or expired refresh token'
+    });
   });
 });
