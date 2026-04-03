@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/api-test-guard.js",
+        "timeout": 1800
+      }
+    ]
+  }
+}
