@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import {
   signUpInputSchema,
   signInInputSchema,
@@ -86,5 +87,19 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(refreshTokenInputSchema))
   async refresh(@Body() data: RefreshTokenInput): Promise<RefreshTokenOutput> {
     return this.authService.refreshTokens(data);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Logout',
+    description: 'Clears the stored refresh token for the authenticated user.'
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User logged out successfully.'
+  })
+  async logout(@CurrentUser('sub') userId: string): Promise<void> {
+    await this.authService.logout(userId);
   }
 }

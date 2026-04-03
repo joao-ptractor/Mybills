@@ -40,6 +40,11 @@ describe('Auth (e2e)', () => {
     return user.refreshToken;
   }
 
+  function expectRefreshTokenCleared(user: User | null): void {
+    expect(user).not.toBeNull();
+    expect(user?.refreshToken).toBeNull();
+  }
+
   function hashRefreshToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
@@ -264,5 +269,35 @@ describe('Auth (e2e)', () => {
       statusCode: 401,
       message: 'Invalid refresh token'
     });
+  });
+
+  it('should logout and invalidate the current refresh token', async () => {
+    const payload: SignUpInput = {
+      name: 'Logout User',
+      email: 'logout-user@mybills.dev',
+      password: 'Teste123'
+    };
+
+    await request(app.getHttpServer()).post('/auth/register').send(payload).expect(201);
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: payload.email, password: payload.password })
+      .expect(200);
+
+    const loginOutput = parseSignInOutput(loginResponse.body as object);
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .set('Authorization', `Bearer ${loginOutput.accessToken}`)
+      .expect(204);
+
+    const user = await usersService.findByEmail(payload.email);
+    expectRefreshTokenCleared(user);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refreshToken: loginOutput.refreshToken })
+      .expect(401);
   });
 });
