@@ -262,7 +262,7 @@ describe('Auth (e2e)', () => {
 
     expect(reusedRefreshResponse.body).toMatchObject({
       statusCode: 401,
-      message: 'Invalid or expired refresh token'
+      message: 'Invalid refresh token'
     });
   });
 });
