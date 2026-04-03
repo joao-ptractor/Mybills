@@ -1,7 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SignUpInput, SignInInput, SignUpOutput, SignInOutput } from '@mybills/dtos';
+import {
+  SignUpInput,
+  SignInInput,
+  SignUpOutput,
+  SignInOutput,
+  RefreshTokenInput,
+  RefreshTokenOutput
+} from '@mybills/dtos';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -15,7 +22,8 @@ describe('AuthController', () => {
           provide: AuthService,
           useValue: {
             signUp: jest.fn(),
-            signIn: jest.fn()
+            signIn: jest.fn(),
+            refreshTokens: jest.fn()
           }
         }
       ]
@@ -67,6 +75,27 @@ describe('AuthController', () => {
       expect(result).toEqual(output);
       expect(authService.signIn).toHaveBeenCalledTimes(1);
       expect(authService.signIn).toHaveBeenCalledWith(input);
+    });
+  });
+
+  describe('refresh', () => {
+    it('should call authService.refreshTokens with correct data and return rotated tokens', async () => {
+      const input: RefreshTokenInput = {
+        refreshToken: 'refresh-token'
+      };
+
+      const output: RefreshTokenOutput = {
+        accessToken: 'access-token',
+        refreshToken: 'new-refresh-token'
+      };
+
+      authService.refreshTokens.mockResolvedValue(output);
+
+      const result = await authController.refresh(input);
+
+      expect(result).toEqual(output);
+      expect(authService.refreshTokens).toHaveBeenCalledTimes(1);
+      expect(authService.refreshTokens).toHaveBeenCalledWith(input);
     });
   });
 });
