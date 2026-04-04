@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { CategoriesModule } from './categories/categories.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { DomainErrorFilter } from '../common/filters/domain-error.filter';
 import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exception.filter';
 
@@ -20,7 +21,8 @@ import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exc
     AuthModule,
     AccountsModule,
     CreditCardsModule,
-    CategoriesModule
+    CategoriesModule,
+    TransactionsModule
   ],
   providers: [
     {

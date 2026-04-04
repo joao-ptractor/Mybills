@@ -1,0 +1,184 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import {
+  CreateTransactionInput,
+  ListTransactionsOutput,
+  TransactionOutput,
+  UpdateTransactionInput,
+  UpdateTransactionIsPaidInput
+} from '@mybills/dtos';
+import { TransactionType } from 'src/generated/prisma/client';
+import { TransactionsController } from './transactions.controller';
+import { TransactionsService } from './transactions.service';
+
+describe('TransactionsController', () => {
+  let controller: TransactionsController;
+  let service: jest.Mocked<TransactionsService>;
+
+  const baseTransaction: TransactionOutput = {
+    id: 'ef6f59a2-02db-4f07-929f-e685e4f7a01f',
+    userId: '6d35154f-0d4f-4efb-95a1-6997e2759c60',
+    accountId: '4f2f72e9-517c-4f6e-83f6-c9a9df15ddef',
+    categoryId: '2df2cc34-219b-4df3-8107-1ab2d1f0ec88',
+    cardId: null,
+    description: 'Market purchase',
+    type: TransactionType.EXPENSE,
+    amount: 2590,
+    date: '2026-04-04T00:00:00.000Z',
+    isPaid: false,
+    createdAt: '2026-04-04T00:00:00.000Z',
+    updatedAt: '2026-04-04T00:00:00.000Z'
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [TransactionsController],
+      providers: [
+        {
+          provide: TransactionsService,
+          useValue: {
+            findAll: jest.fn(),
+            findById: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            updateIsPaid: jest.fn(),
+            remove: jest.fn()
+          }
+        }
+      ]
+    }).compile();
+
+    controller = module.get<TransactionsController>(TransactionsController);
+    service = module.get(TransactionsService) as jest.Mocked<TransactionsService>;
+  });
+
+  describe('findAll', () => {
+    it('should call transactionsService.findAll with current user id and return transactions', async () => {
+      const output: ListTransactionsOutput = [baseTransaction];
+      service.findAll.mockResolvedValue(output);
+
+      const result = await controller.findAll(baseTransaction.userId);
+
+      expect(result).toEqual(output);
+      expect(service.findAll).toHaveBeenCalledTimes(1);
+      expect(service.findAll).toHaveBeenCalledWith(baseTransaction.userId);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should call transactionsService.findById with transaction id and user id', async () => {
+      service.findById.mockResolvedValue(baseTransaction);
+
+      const result = await controller.findOne(baseTransaction.userId, { id: baseTransaction.id });
+
+      expect(result).toEqual(baseTransaction);
+      expect(service.findById).toHaveBeenCalledTimes(1);
+      expect(service.findById).toHaveBeenCalledWith(baseTransaction.id, baseTransaction.userId);
+    });
+  });
+
+  describe('create', () => {
+    it('should call transactionsService.create with payload and user id', async () => {
+      const input: CreateTransactionInput = {
+        accountId: baseTransaction.accountId,
+        categoryId: baseTransaction.categoryId,
+        cardId: null,
+        description: baseTransaction.description,
+        type: TransactionType.EXPENSE,
+        amount: 2590,
+        date: '2026-04-04',
+        isPaid: false
+      };
+
+      service.create.mockResolvedValue(baseTransaction);
+
+      const result = await controller.create(baseTransaction.userId, input);
+
+      expect(result).toEqual(baseTransaction);
+      expect(service.create).toHaveBeenCalledTimes(1);
+      expect(service.create).toHaveBeenCalledWith({
+        userId: baseTransaction.userId,
+        accountId: input.accountId,
+        categoryId: input.categoryId,
+        cardId: input.cardId,
+        description: input.description,
+        type: input.type,
+        amount: input.amount,
+        date: input.date,
+        isPaid: input.isPaid
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('should call transactionsService.update with transaction id, user id and payload', async () => {
+      const input: UpdateTransactionInput = {
+        amount: 3000,
+        description: 'Updated description'
+      };
+      const output: TransactionOutput = {
+        ...baseTransaction,
+        amount: 3000,
+        description: 'Updated description'
+      };
+
+      service.update.mockResolvedValue(output);
+
+      const result = await controller.update(
+        baseTransaction.userId,
+        { id: baseTransaction.id },
+        input
+      );
+
+      expect(result).toEqual(output);
+      expect(service.update).toHaveBeenCalledTimes(1);
+      expect(service.update).toHaveBeenCalledWith(baseTransaction.id, baseTransaction.userId, {
+        accountId: input.accountId,
+        categoryId: input.categoryId,
+        cardId: input.cardId,
+        description: input.description,
+        type: input.type,
+        amount: input.amount,
+        date: input.date
+      });
+    });
+  });
+
+  describe('updateIsPaid', () => {
+    it('should call transactionsService.updateIsPaid with transaction id, user id and paid status', async () => {
+      const input: UpdateTransactionIsPaidInput = {
+        isPaid: true
+      };
+      const output: TransactionOutput = {
+        ...baseTransaction,
+        isPaid: true
+      };
+
+      service.updateIsPaid.mockResolvedValue(output);
+
+      const result = await controller.updateIsPaid(
+        baseTransaction.userId,
+        { id: baseTransaction.id },
+        input
+      );
+
+      expect(result).toEqual(output);
+      expect(service.updateIsPaid).toHaveBeenCalledTimes(1);
+      expect(service.updateIsPaid).toHaveBeenCalledWith(
+        baseTransaction.id,
+        baseTransaction.userId,
+        input.isPaid
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should call transactionsService.remove with transaction id and user id', async () => {
+      service.remove.mockResolvedValue(undefined);
+
+      await controller.remove(baseTransaction.userId, { id: baseTransaction.id });
+
+      expect(service.remove).toHaveBeenCalledTimes(1);
+      expect(service.remove).toHaveBeenCalledWith(baseTransaction.id, baseTransaction.userId);
+    });
+  });
+});
