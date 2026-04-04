@@ -4,6 +4,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { validate } from '../config/env.validation';
 import { UserModule } from './user/users.module';
 import { AuthModule } from './auth/auth.module';
+import { AccountsModule } from './accounts/accounts.module';
 import { DomainErrorFilter } from '../common/filters/domain-error.filter';
 import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exception.filter';
 
@@ -14,7 +15,8 @@ import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exc
       envFilePath: process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
     }),
     UserModule,
-    AuthModule
+    AuthModule,
+    AccountsModule
   ],
   providers: [
     {
