@@ -29,6 +29,15 @@ export class AccountsService {
     return account;
   }
 
+  async accountExistsForUser(accountId: string, userId: string): Promise<boolean> {
+    this.validateAccountId(accountId);
+    this.validateUserId(userId);
+
+    const account = await this.repository.findByIdAndUserId(accountId, userId);
+
+    return account !== null;
+  }
+
   async create(data: CreateAccountData): Promise<Account> {
     this.validateCreateData(data);
 

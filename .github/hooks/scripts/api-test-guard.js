@@ -10,7 +10,7 @@ function run(command, options = {}) {
 
 function hasApiChanges() {
   try {
-    const output = run('git status --porcelain apps/api');
+    const output = run('git status --porcelain apps/api/src');
     return output.trim().length > 0;
   } catch {
     // Se o comando falhar, rodar por prevenção

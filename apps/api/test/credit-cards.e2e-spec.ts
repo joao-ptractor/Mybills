@@ -1,0 +1,275 @@
+import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from 'src/modules/app.module';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { SignInInput, SignUpInput, signInOutputSchema } from '@mybills/dtos';
+
+describe('CreditCards (e2e)', () => {
+  let app: INestApplication<App>;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule]
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  async function authenticateUser(email: string): Promise<string> {
+    const registerPayload: SignUpInput = {
+      name: 'Credit Card User',
+      email,
+      password: 'StrongPass123'
+    };
+
+    await request(app.getHttpServer()).post('/auth/register').send(registerPayload).expect(201);
+
+    const loginPayload: SignInInput = {
+      email,
+      password: registerPayload.password
+    };
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send(loginPayload)
+      .expect(200);
+
+    const output = signInOutputSchema.parse(loginResponse.body as object);
+
+    return output.accessToken;
+  }
+
+  async function createAccount(accessToken: string, name: string, balance: number) {
+    const response = await request(app.getHttpServer())
+      .post('/accounts')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ name, balance })
+      .expect(201);
+
+    return response.body as { id: string };
+  }
+
+  it('should create a credit card for an authenticated user', async () => {
+    const accessToken = await authenticateUser('credit-cards-create@mybills.dev');
+    const account = await createAccount(accessToken, 'Card Account', 0);
+
+    const response = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        accountId: account.id,
+        name: 'Platinum Card',
+        limit: 1000000,
+        closingDay: 10,
+        dueDay: 18
+      })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      id: expect.any(String),
+      userId: expect.any(String),
+      accountId: account.id,
+      name: 'Platinum Card',
+      limit: 1000000,
+      closingDay: 10,
+      dueDay: 18,
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String)
+    });
+  });
+
+  it('should list only credit cards from the authenticated user', async () => {
+    const firstUserToken = await authenticateUser('credit-cards-list-user-a@mybills.dev');
+    const secondUserToken = await authenticateUser('credit-cards-list-user-b@mybills.dev');
+
+    const firstUserAccount = await createAccount(firstUserToken, 'A Account', 0);
+    const secondUserAccount = await createAccount(secondUserToken, 'B Account', 0);
+
+    const firstUserCard = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${firstUserToken}`)
+      .send({
+        accountId: firstUserAccount.id,
+        name: 'A Card',
+        limit: 200000,
+        closingDay: 5,
+        dueDay: 12
+      })
+      .expect(201);
+
+    const secondUserCard = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${secondUserToken}`)
+      .send({
+        accountId: secondUserAccount.id,
+        name: 'B Card',
+        limit: 300000,
+        closingDay: 7,
+        dueDay: 15
+      })
+      .expect(201);
+
+    const listResponse = await request(app.getHttpServer())
+      .get('/credit-cards')
+      .set('Authorization', `Bearer ${firstUserToken}`)
+      .expect(200);
+
+    expect(Array.isArray(listResponse.body)).toBe(true);
+
+    const ids = (listResponse.body as Array<{ id: string }>).map((creditCard) => creditCard.id);
+
+    expect(ids).toContain(firstUserCard.body.id as string);
+    expect(ids).not.toContain(secondUserCard.body.id as string);
+  });
+
+  it('should return one credit card by id when it belongs to the authenticated user', async () => {
+    const accessToken = await authenticateUser('credit-cards-findone@mybills.dev');
+    const account = await createAccount(accessToken, 'Find Account', 0);
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        accountId: account.id,
+        name: 'Find Card',
+        limit: 150000,
+        closingDay: 8,
+        dueDay: 16
+      })
+      .expect(201);
+
+    const response = await request(app.getHttpServer())
+      .get(`/credit-cards/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      id: createResponse.body.id,
+      name: 'Find Card',
+      limit: 150000
+    });
+  });
+
+  it('should return not found when trying to access another user credit card', async () => {
+    const firstUserToken = await authenticateUser('credit-cards-not-found-a@mybills.dev');
+    const secondUserToken = await authenticateUser('credit-cards-not-found-b@mybills.dev');
+
+    const firstUserAccount = await createAccount(firstUserToken, 'Private Account A', 0);
+    const secondUserAccount = await createAccount(secondUserToken, 'Private Account B', 0);
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${firstUserToken}`)
+      .send({
+        accountId: firstUserAccount.id,
+        name: 'Private Card',
+        limit: 180000,
+        closingDay: 9,
+        dueDay: 17
+      })
+      .expect(201);
+
+    const response = await request(app.getHttpServer())
+      .get(`/credit-cards/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${secondUserToken}`)
+      .expect(404);
+
+    expect(response.body).toMatchObject({
+      statusCode: 404,
+      message: 'Credit card not found',
+      error: 'not_found'
+    });
+
+    await request(app.getHttpServer())
+      .get(`/accounts/${secondUserAccount.id}`)
+      .set('Authorization', `Bearer ${secondUserToken}`)
+      .expect(200);
+  });
+
+  it('should update an existing credit card', async () => {
+    const accessToken = await authenticateUser('credit-cards-update@mybills.dev');
+    const account = await createAccount(accessToken, 'Update Account', 0);
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        accountId: account.id,
+        name: 'Before Update',
+        limit: 250000,
+        closingDay: 11,
+        dueDay: 19
+      })
+      .expect(201);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/credit-cards/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        name: 'After Update',
+        limit: 260000
+      })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      id: createResponse.body.id,
+      name: 'After Update',
+      limit: 260000
+    });
+  });
+
+  it('should delete a credit card and return not found when fetching it afterwards', async () => {
+    const accessToken = await authenticateUser('credit-cards-delete@mybills.dev');
+    const account = await createAccount(accessToken, 'Delete Account', 0);
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        accountId: account.id,
+        name: 'Delete Card',
+        limit: 120000,
+        closingDay: 6,
+        dueDay: 14
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete(`/credit-cards/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(204);
+
+    await request(app.getHttpServer())
+      .get(`/credit-cards/${createResponse.body.id as string}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(404);
+  });
+
+  it('should validate credit card creation payload', async () => {
+    const accessToken = await authenticateUser('credit-cards-validation@mybills.dev');
+    const account = await createAccount(accessToken, 'Validation Account', 0);
+
+    const response = await request(app.getHttpServer())
+      .post('/credit-cards')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        accountId: account.id,
+        name: '',
+        limit: 1000.5,
+        closingDay: 0,
+        dueDay: 32
+      })
+      .expect(400);
+
+    expect(response.body).toMatchObject({
+      message: 'Validation failed'
+    });
+    expect(response.body.errors).toBeDefined();
+  });
+});

@@ -73,6 +73,32 @@ describe('AccountsService', () => {
     });
   });
 
+  describe('accountExistsForUser', () => {
+    it('should return true when account belongs to user', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(account);
+
+      const result = await service.accountExistsForUser(account.id, account.userId);
+
+      expect(result).toBe(true);
+      expect(repository.findByIdAndUserId).toHaveBeenCalledWith(account.id, account.userId);
+    });
+
+    it('should return false when account does not belong to user', async () => {
+      repository.findByIdAndUserId.mockResolvedValue(null);
+
+      const result = await service.accountExistsForUser(account.id, account.userId);
+
+      expect(result).toBe(false);
+      expect(repository.findByIdAndUserId).toHaveBeenCalledWith(account.id, account.userId);
+    });
+
+    it('should throw InvalidArgumentError if account id is invalid', async () => {
+      await expect(service.accountExistsForUser('', account.userId)).rejects.toThrow(
+        InvalidArgumentError
+      );
+    });
+  });
+
   describe('create', () => {
     it('should create account with provided data', async () => {
       repository.create.mockResolvedValue(account);
