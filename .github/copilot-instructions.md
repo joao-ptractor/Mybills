@@ -19,3 +19,7 @@ These instructions apply to the entire monorepo.
 - Keep controllers thin; move business logic to services.
 - Keep functions focused and side effects explicit.
 - Preserve existing naming and module boundaries unless a task explicitly requires refactoring.
+
+## Utilities
+
+- Use `@mybills/utils` for shared helper functions and types.
