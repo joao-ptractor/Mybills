@@ -5,6 +5,7 @@ import { validate } from '../config/env.validation';
 import { UserModule } from './user/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccountsModule } from './accounts/accounts.module';
+import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { DomainErrorFilter } from '../common/filters/domain-error.filter';
 import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exception.filter';
 
@@ -16,7 +17,8 @@ import { PrismaClientExceptionFilter } from '../common/filters/prisma-client-exc
     }),
     UserModule,
     AuthModule,
-    AccountsModule
+    AccountsModule,
+    CreditCardsModule
   ],
   providers: [
     {
