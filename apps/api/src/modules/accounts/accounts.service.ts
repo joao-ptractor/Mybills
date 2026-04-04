@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InvalidArgumentError } from 'src/common/errors/invalid-argument.error';
 import { NotFoundError } from 'src/common/errors/not-found.error';
 import { CreateAccountData } from './contracts/create-account-data.contract';
+import { TransferBalanceData } from './contracts/transfer-balance-data.contract';
+import { TransferBalanceResult } from './contracts/transfer-balance-result.contract';
 import { UpdateAccountData } from './contracts/update-account-data.contract';
 import { Account } from './entities/account.entity';
 import { AccountRepository } from './repositories/account.repository';
@@ -42,6 +44,37 @@ export class AccountsService {
     this.validateCreateData(data);
 
     return await this.repository.create(data);
+  }
+
+  async transferBalance(data: TransferBalanceData): Promise<TransferBalanceResult> {
+    this.validateTransferData(data);
+
+    const sourceAccount = await this.repository.findByIdAndUserId(data.sourceAccountId, data.userId);
+
+    if (!sourceAccount) {
+      throw new NotFoundError('Source account not found');
+    }
+
+    const destinationAccount = await this.repository.findByIdAndUserId(
+      data.destinationAccountId,
+      data.userId
+    );
+
+    if (!destinationAccount) {
+      throw new NotFoundError('Destination account not found');
+    }
+
+    if (sourceAccount.balance < data.amount) {
+      throw new InvalidArgumentError('Insufficient account balance');
+    }
+
+    const transferResult = await this.repository.transferBalance(data);
+
+    if (!transferResult) {
+      throw new InvalidArgumentError('Transfer could not be completed');
+    }
+
+    return transferResult;
   }
 
   async update(accountId: string, userId: string, data: UpdateAccountData): Promise<Account> {
@@ -85,6 +118,20 @@ export class AccountsService {
 
     if (data.balance !== undefined && !Number.isInteger(data.balance)) {
       throw new InvalidArgumentError('Invalid account balance');
+    }
+  }
+
+  private validateTransferData(data: TransferBalanceData): void {
+    this.validateUserId(data.userId);
+    this.validateAccountId(data.sourceAccountId);
+    this.validateAccountId(data.destinationAccountId);
+
+    if (data.sourceAccountId === data.destinationAccountId) {
+      throw new InvalidArgumentError('Source and destination accounts must be different');
+    }
+
+    if (!Number.isInteger(data.amount) || data.amount <= 0) {
+      throw new InvalidArgumentError('Invalid transfer amount');
     }
   }
 
