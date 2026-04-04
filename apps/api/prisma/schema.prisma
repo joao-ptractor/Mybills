@@ -24,7 +24,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   accounts     Account[]
-  creditCards  creditCard[]
+  creditCards  CreditCard[]
   categories   Category[]
   transactions Transaction[]
 
@@ -40,13 +40,13 @@ model Account {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  creditCards  creditCard[]
+  creditCards  CreditCard[]
   transactions Transaction[]
 
   @@map("accounts")
 }
 
-model creditCard {
+model CreditCard {
   id         String   @id @default(uuid())
   userId     String   @map("user_id")
   accountId  String   @map("account_id")
@@ -94,7 +94,7 @@ model Transaction {
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   account  Account?    @relation(fields: [accountId], references: [id], onDelete: SetNull)
   category Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  card     creditCard? @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  card     CreditCard? @relation(fields: [cardId], references: [id], onDelete: SetNull)
 
   @@map("transactions")
 }
